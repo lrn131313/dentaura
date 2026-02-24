@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { ContactMessage } from '@/types/database'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,6 +19,7 @@ import { toast } from 'sonner'
 import { CheckCheck, Trash2 } from 'lucide-react'
 
 export default function AdminMesajePage() {
+  const router = useRouter()
   const [messages, setMessages] = useState<ContactMessage[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -30,15 +32,22 @@ export default function AdminMesajePage() {
     if (error) {
       toast.error('Eroare la incarcarea mesajelor', { description: error.message })
       setLoading(false)
+      // Attempt to handle auth errors or generic failures
+      if (error.message.includes('JWT') || error.code === 'PGRST301') {
+        router.push('/admin/login')
+      }
       return
     }
 
     setMessages(data ?? [])
     setLoading(false)
-  }, [])
+  }, [router])
 
   useEffect(() => {
-    fetchMessages()
+    const run = async () => {
+      await fetchMessages()
+    }
+    void run()
   }, [fetchMessages])
 
   async function markAsRead(id: string) {
@@ -118,7 +127,7 @@ export default function AdminMesajePage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[20px]"></TableHead>
+                    <TableHead className="w-[20px]"><span className="sr-only">Status</span></TableHead>
                     <TableHead>Nume</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Telefon</TableHead>

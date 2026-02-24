@@ -23,12 +23,23 @@ const categoryOrder = [
 export default async function ServiciiPage() {
   const supabase = await createSupabaseServer()
 
-  const { data: services } = await supabase
+  const { data: services, error } = await supabase
     .from('services')
     .select('*')
     .order('category, name')
 
-  const grouped = (services as Service[] | null)?.reduce<
+  if (error) {
+    console.error('Error fetching services:', error)
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <p className="text-red-500">
+          A aparut o eroare la incarcarea serviciilor. Te rugam sa incerci mai tarziu.
+        </p>
+      </div>
+    )
+  }
+
+  const grouped = (services as Service[])?.reduce<
     Record<string, Service[]>
   >((acc, service) => {
     const cat = service.category ?? 'General'

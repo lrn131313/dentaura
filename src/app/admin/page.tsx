@@ -85,7 +85,10 @@ export default function AdminDashboardPage() {
   }, [])
 
   useEffect(() => {
-    fetchData()
+    const run = async () => {
+      await fetchData()
+    }
+    void run()
   }, [fetchData])
 
   async function updateStatus(id: string, status: 'confirmed' | 'cancelled') {

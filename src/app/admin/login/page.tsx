@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,19 +13,31 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Loader2, ShieldCheck } from 'lucide-react'
 
+const loginSchema = z.object({
+  email: z.string().email('Email invalid'),
+  password: z.string().min(1, 'Parola este obligatorie'),
+})
+
+type LoginValues = z.infer<typeof loginSchema>
+
 export default function AdminLoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+  })
+
+  async function onSubmit(data: LoginValues) {
     setLoading(true)
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: data.email,
+      password: data.password,
     })
 
     if (error) {
@@ -52,18 +67,19 @@ export default function AdminLoginPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="admin@dentaura.ro"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
                 disabled={loading}
+                {...register('email')}
               />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Parola</Label>
@@ -71,11 +87,12 @@ export default function AdminLoginPage() {
                 id="password"
                 type="password"
                 placeholder="Introdu parola"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
                 disabled={loading}
+                {...register('password')}
               />
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password.message}</p>
+              )}
             </div>
             <Button
               type="submit"
