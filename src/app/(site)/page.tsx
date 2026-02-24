@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import type { Doctor, Service } from '@/types/database'
+import HeroSection from '@/components/HeroSection'
 
 // SVG Icons as components
 function ToothIcon({ className }: { className?: string }) {
@@ -218,77 +219,7 @@ export default async function HomePage() {
   return (
     <>
       {/* ====== HERO SECTION ====== */}
-      <section id="hero" className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Text */}
-            <div className="space-y-8">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-4 py-1.5 text-sm font-medium text-teal-700">
-                  <ToothIcon className="w-4 h-4" />
-                  Clinica Stomatologica Premium
-                </span>
-              </div>
-
-              <h1 className="text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.1]">
-                Zambetul tau merita{' '}
-                <span className="text-teal-600">grija de exceptie</span>
-              </h1>
-
-              <p className="text-lg text-slate-600 max-w-lg leading-relaxed">
-                Clinica stomatologica moderna cu tehnologie de ultima generatie
-                si o echipa dedicata confortului tau.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  href="/programare"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-6 py-3.5 text-base font-semibold text-white shadow-sm hover:bg-teal-700 transition-colors"
-                >
-                  <CalendarIcon className="w-5 h-5" />
-                  Programeaza Consultatie
-                </Link>
-                <Link
-                  href="/servicii"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-slate-200 px-6 py-3.5 text-base font-semibold text-slate-700 hover:border-teal-200 hover:text-teal-700 transition-colors"
-                >
-                  Descopera Serviciile
-                  <ArrowRightIcon className="w-4 h-4" />
-                </Link>
-              </div>
-
-              {/* Trust badges */}
-              <div className="flex flex-wrap gap-6 pt-4">
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-teal-50 text-teal-600">
-                    <TrophyIcon className="w-4 h-4" />
-                  </div>
-                  <span className="font-semibold">12+ Ani Experienta</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-teal-50 text-teal-600">
-                    <UsersIcon className="w-4 h-4" />
-                  </div>
-                  <span className="font-semibold">5000+ Pacienti</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-teal-50 text-teal-600">
-                    <ShieldCheckIcon className="w-4 h-4" />
-                  </div>
-                  <span className="font-semibold">98% Rata Succes</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Image placeholder */}
-            <div className="relative">
-              <div className="bg-gradient-to-br from-teal-100 to-teal-50 rounded-2xl aspect-[4/3] flex items-center justify-center">
-                <ToothIcon className="w-32 h-32 text-teal-300" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* ====== SERVICES PREVIEW ====== */}
       <section id="servicii" className="bg-slate-50">

@@ -102,6 +102,19 @@ export default function AdminLayout({
       setLoading(false)
     }
     checkAuth()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          setAuthenticated(true)
+        } else if (event === 'SIGNED_OUT') {
+          setAuthenticated(false)
+          if (!isLoginPage) router.push('/admin/login')
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
   }, [isLoginPage, router])
 
   async function handleLogout() {

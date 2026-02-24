@@ -171,6 +171,132 @@ html {
 .animate-on-scroll[data-delay="3"] { transition-delay: 0.3s; }
 .animate-on-scroll[data-delay="4"] { transition-delay: 0.4s; }
 
+/* ═══ HERO ANIMATIONS ═══ */
+
+/* Fade up entrance */
+.hero-fade-up {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: heroFadeUp 0.8s ease-out forwards;
+}
+
+.hero-delay-1 { animation-delay: 0.1s; }
+.hero-delay-2 { animation-delay: 0.25s; }
+.hero-delay-3 { animation-delay: 0.4s; }
+.hero-delay-4 { animation-delay: 0.55s; }
+.hero-delay-5 { animation-delay: 0.7s; }
+
+@keyframes heroFadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Text gradient shimmer */
+.hero-text-gradient {
+  background: linear-gradient(135deg, #ccfbf1, #ffffff, #99f6e4, #ffffff);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: heroGradientShimmer 6s ease-in-out infinite;
+}
+
+@keyframes heroGradientShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Floating orbs */
+.hero-orb {
+  animation: heroOrbFloat 8s ease-in-out infinite;
+}
+.hero-orb-1 { animation-duration: 7s; }
+.hero-orb-2 { animation-duration: 9s; animation-delay: -3s; }
+.hero-orb-3 { animation-duration: 11s; animation-delay: -5s; }
+
+@keyframes heroOrbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(20px, -20px) scale(1.05); }
+  66% { transform: translate(-15px, 15px) scale(0.95); }
+}
+
+/* Floating elements */
+.hero-float {
+  animation: heroFloat 4s ease-in-out infinite;
+}
+.hero-float-1 { animation-duration: 5s; animation-delay: 0s; }
+.hero-float-2 { animation-duration: 4.5s; animation-delay: -1s; }
+.hero-float-3 { animation-duration: 5.5s; animation-delay: -2s; }
+.hero-float-4 { animation-duration: 6s; animation-delay: -0.5s; }
+.hero-float-5 { animation-duration: 4s; animation-delay: -3s; }
+.hero-float-6 { animation-duration: 5s; animation-delay: -1.5s; }
+.hero-float-7 { animation-duration: 6s; animation-delay: -2.5s; }
+
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(3deg); }
+}
+
+/* Gentle float for main illustration */
+.hero-float-gentle {
+  animation: heroFloatGentle 5s ease-in-out infinite;
+}
+.hero-float-gentle-delayed {
+  animation: heroFloatGentle 5s ease-in-out infinite;
+  animation-delay: -2.5s;
+}
+
+@keyframes heroFloatGentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Slow spinning ring */
+.hero-spin-slow {
+  animation: heroSpinSlow 30s linear infinite;
+}
+
+@keyframes heroSpinSlow {
+  to { transform: rotate(360deg); }
+}
+
+/* Orbiting icons */
+.hero-orbit {
+  animation: heroOrbitBob 6s ease-in-out infinite;
+}
+.hero-orbit-1 { animation-duration: 5s; }
+.hero-orbit-2 { animation-duration: 7s; animation-delay: -2s; }
+.hero-orbit-3 { animation-duration: 6s; animation-delay: -4s; }
+
+@keyframes heroOrbitBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Sparkle twinkle */
+.hero-sparkle {
+  animation: heroSparkle 2.5s ease-in-out infinite;
+}
+.hero-sparkle-delayed { animation-delay: -0.8s; }
+.hero-sparkle-delayed-2 { animation-delay: -1.6s; }
+
+@keyframes heroSparkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Pulse glow */
+.hero-pulse {
+  animation: heroPulse 4s ease-in-out infinite;
+}
+
+@keyframes heroPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
 /* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   html {

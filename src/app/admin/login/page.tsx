@@ -49,7 +49,7 @@ export default function AdminLoginPage() {
     }
 
     toast.success('Autentificare reusita!')
-    router.push('/admin')
+    window.location.href = '/admin'
   }
 
   return (
