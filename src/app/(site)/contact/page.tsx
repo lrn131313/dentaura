@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
-import { MapPin, Phone, Mail, Clock } from 'lucide-react'
+import { useState } from 'react'
+import { MapPin, Phone, Mail, Clock, Loader2 } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -9,30 +12,41 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 
+const contactSchema = z.object({
+  name: z.string().min(2, 'Numele este prea scurt'),
+  email: z.string().email('Email invalid'),
+  phone: z.string().optional(),
+  message: z.string().min(10, 'Mesajul trebuie sa contina cel putin 10 caractere'),
+})
+
+type ContactValues = z.infer<typeof contactSchema>
+
 export default function ContactPage() {
   const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ContactValues>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      message: '',
+    },
   })
 
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
-  }
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
+  async function onSubmit(data: ContactValues) {
     setLoading(true)
 
     const { error } = await supabase.from('contact_messages').insert({
-      name: form.name,
-      email: form.email,
-      phone: form.phone || null,
-      message: form.message,
+      name: data.name,
+      email: data.email,
+      phone: data.phone || null,
+      message: data.message,
     })
 
     setLoading(false)
@@ -43,7 +57,7 @@ export default function ContactPage() {
     }
 
     toast.success('Mesajul a fost trimis cu succes! Te vom contacta in curand.')
-    setForm({ name: '', email: '', phone: '', message: '' })
+    reset()
   }
 
   const contactInfo = [
@@ -100,62 +114,72 @@ export default function ContactPage() {
               <h2 className="text-2xl font-bold text-slate-900 mb-6">
                 Trimite-ne un mesaj
               </h2>
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nume *</Label>
                   <Input
                     id="name"
-                    name="name"
-                    required
-                    value={form.name}
-                    onChange={handleChange}
                     placeholder="Numele tau complet"
+                    {...register('name')}
                   />
+                  {errors.name && (
+                    <p className="text-sm text-red-500">{errors.name.message}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email *</Label>
                   <Input
                     id="email"
-                    name="email"
                     type="email"
-                    required
-                    value={form.email}
-                    onChange={handleChange}
                     placeholder="email@exemplu.ro"
+                    {...register('email')}
                   />
+                  {errors.email && (
+                    <p className="text-sm text-red-500">{errors.email.message}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Telefon</Label>
                   <Input
                     id="phone"
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
                     placeholder="+40 7XX XXX XXX"
+                    {...register('phone')}
                   />
+                  {errors.phone && (
+                    <p className="text-sm text-red-500">{errors.phone.message}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="message">Mesaj *</Label>
                   <Textarea
                     id="message"
-                    name="message"
-                    required
                     rows={5}
-                    value={form.message}
-                    onChange={handleChange}
                     placeholder="Scrie-ne mesajul tau..."
+                    {...register('message')}
                   />
+                  {errors.message && (
+                    <p className="text-sm text-red-500">
+                      {errors.message.message}
+                    </p>
+                  )}
                 </div>
 
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-xl py-3 text-base font-semibold"
+                  className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-xl py-6 text-base font-semibold"
                 >
-                  {loading ? 'Se trimite...' : 'Trimite Mesajul'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Se trimite...
+                    </>
+                  ) : (
+                    'Trimite Mesajul'
+                  )}
                 </Button>
               </form>
             </div>

@@ -17,10 +17,12 @@ import {
   Check,
   Clock,
   ArrowLeft,
-  User,
   CalendarDays,
   Loader2,
 } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 
 /* ───────────────────────── helpers ───────────────────────── */
 
@@ -30,6 +32,15 @@ const STEP_LABELS = [
   'Alege Data si Ora',
   'Datele Tale',
 ]
+
+const patientSchema = z.object({
+  patientName: z.string().min(2, 'Numele este obligatoriu'),
+  patientEmail: z.string().email('Email invalid'),
+  patientPhone: z.string().min(10, 'Numar de telefon invalid'),
+  notes: z.string().optional(),
+})
+
+type PatientValues = z.infer<typeof patientSchema>
 
 function generateTimeSlots(
   startTime: string,
@@ -47,10 +58,6 @@ function generateTimeSlots(
     const h = Math.floor(m / 60)
     const min = m % 60
     const slotStart = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`
-    const slotEndMin = m + durationMinutes
-    const slotEndH = Math.floor(slotEndMin / 60)
-    const slotEndMinPart = slotEndMin % 60
-    const slotEnd = `${String(slotEndH).padStart(2, '0')}:${String(slotEndMinPart).padStart(2, '0')}`
 
     const isBooked = bookedSlots.some((booked) => {
       const bookedStartMin =
@@ -97,11 +104,21 @@ export default function ProgramarePage() {
     { start_time: string; end_time: string }[]
   >([])
 
-  // Patient state
-  const [patientName, setPatientName] = useState('')
-  const [patientEmail, setPatientEmail] = useState('')
-  const [patientPhone, setPatientPhone] = useState('')
-  const [notes, setNotes] = useState('')
+  // Patient state (React Hook Form)
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    formState: { errors },
+    reset: resetHookForm,
+  } = useForm<PatientValues>({
+    resolver: zodResolver(patientSchema),
+    defaultValues: {
+      patientName: '',
+      patientEmail: '',
+      patientPhone: '',
+      notes: '',
+    },
+  })
 
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -144,10 +161,11 @@ export default function ProgramarePage() {
         return
       }
 
+      // Type assertion for the join query result
       const doctorList: Doctor[] =
-        data
-          ?.map((ds: any) => ds.doctors)
-          .filter(Boolean) ?? []
+        (data as unknown as { doctors: Doctor | null }[])
+          ?.map((ds) => ds.doctors)
+          .filter((d): d is Doctor => d !== null) ?? []
       setDoctors(doctorList)
       setLoadingDoctors(false)
     }
@@ -244,26 +262,11 @@ export default function ProgramarePage() {
     setSelectedDate(undefined)
     setSelectedTime(null)
     setBookedSlots([])
-    setPatientName('')
-    setPatientEmail('')
-    setPatientPhone('')
-    setNotes('')
-  }, [])
+    resetHookForm()
+  }, [resetHookForm])
 
   /* ── Submit handler ── */
-  const handleSubmit = async () => {
-    if (!patientName.trim()) {
-      toast.error('Te rugam sa introduci numele complet.')
-      return
-    }
-    if (!patientEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientEmail)) {
-      toast.error('Te rugam sa introduci o adresa de email valida.')
-      return
-    }
-    if (!patientPhone.trim() || patientPhone.trim().length < 10) {
-      toast.error('Te rugam sa introduci un numar de telefon valid.')
-      return
-    }
+  const onSubmit = async (data: PatientValues) => {
     if (!selectedService || !selectedDoctor || !selectedDate || !selectedTime) {
       toast.error('Date incomplete. Te rugam sa reiei procesul.')
       return
@@ -281,14 +284,14 @@ export default function ProgramarePage() {
     const { error } = await supabase.from('appointments').insert({
       service_id: selectedService.id,
       doctor_id: selectedDoctor.id,
-      patient_name: patientName.trim(),
-      patient_email: patientEmail.trim(),
-      patient_phone: patientPhone.trim(),
+      patient_name: data.patientName,
+      patient_email: data.patientEmail,
+      patient_phone: data.patientPhone,
       appointment_date: dateStr,
       start_time: selectedTime,
       end_time: endTime,
       status: 'pending',
-      notes: notes.trim() || null,
+      notes: data.notes || null,
     })
 
     setIsSubmitting(false)
@@ -586,8 +589,14 @@ export default function ProgramarePage() {
                         {timeSlotsForDate.map((slot) => (
                           <button
                             key={slot.time}
+                            type="button"
                             disabled={!slot.available}
                             onClick={() => handleSelectTime(slot.time)}
+                            aria-label={
+                              slot.available
+                                ? `Selecteaza ora ${slot.time}`
+                                : `Ora ${slot.time} este indisponibila`
+                            }
                             className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-all ${
                               !slot.available
                                 ? 'bg-gray-100 text-gray-300 cursor-not-allowed line-through'
@@ -683,80 +692,88 @@ export default function ProgramarePage() {
               {/* Patient Form */}
               <Card>
                 <CardContent className="py-6 space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="patientName">
-                      Nume complet <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="patientName"
-                      type="text"
-                      placeholder="ex: Popescu Maria"
-                      value={patientName}
-                      onChange={(e) => setPatientName(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="patientEmail">
-                      Email <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="patientEmail"
-                      type="email"
-                      placeholder="ex: maria@email.com"
-                      value={patientEmail}
-                      onChange={(e) => setPatientEmail(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="patientPhone">
-                      Telefon <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="patientPhone"
-                      type="tel"
-                      placeholder="ex: 0712 345 678"
-                      value={patientPhone}
-                      onChange={(e) => setPatientPhone(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Observatii (optional)</Label>
-                    <Textarea
-                      id="notes"
-                      placeholder="Mentiuni speciale, alergii, tratamente in curs..."
-                      rows={4}
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => goToStep(3)}
-                      className="sm:w-auto"
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Inapoi
-                    </Button>
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={isSubmitting}
-                      className="w-full bg-teal-600 hover:bg-teal-700 text-white"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Se trimite...
-                        </>
-                      ) : (
-                        'Confirma Programarea'
+                  <form id="booking-form" onSubmit={handleFormSubmit(onSubmit)} className="space-y-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="patientName">
+                        Nume complet <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="patientName"
+                        type="text"
+                        placeholder="ex: Popescu Maria"
+                        {...register('patientName')}
+                      />
+                      {errors.patientName && (
+                        <p className="text-sm text-red-500">{errors.patientName.message}</p>
                       )}
-                    </Button>
-                  </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="patientEmail">
+                        Email <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="patientEmail"
+                        type="email"
+                        placeholder="ex: maria@email.com"
+                        {...register('patientEmail')}
+                      />
+                      {errors.patientEmail && (
+                        <p className="text-sm text-red-500">{errors.patientEmail.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="patientPhone">
+                        Telefon <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="patientPhone"
+                        type="tel"
+                        placeholder="ex: 0712 345 678"
+                        {...register('patientPhone')}
+                      />
+                      {errors.patientPhone && (
+                        <p className="text-sm text-red-500">{errors.patientPhone.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Observatii (optional)</Label>
+                      <Textarea
+                        id="notes"
+                        placeholder="Mentiuni speciale, alergii, tratamente in curs..."
+                        rows={4}
+                        {...register('notes')}
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => goToStep(3)}
+                        className="sm:w-auto"
+                      >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Inapoi
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Se trimite...
+                          </>
+                        ) : (
+                          'Confirma Programarea'
+                        )}
+                      </Button>
+                    </div>
+                  </form>
                 </CardContent>
               </Card>
             </div>

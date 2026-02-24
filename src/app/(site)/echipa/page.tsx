@@ -22,10 +22,21 @@ function getInitials(name: string): string {
 export default async function EchipaPage() {
   const supabase = await createSupabaseServer()
 
-  const { data: doctors } = await supabase
+  const { data: doctors, error: doctorsError } = await supabase
     .from('doctors')
     .select('*')
     .order('name')
+
+  if (doctorsError) {
+    console.error('Error fetching doctors:', doctorsError)
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <p className="text-red-500">
+          A aparut o eroare la incarcarea echipei medicale. Te rugam sa incerci mai tarziu.
+        </p>
+      </div>
+    )
+  }
 
   const { data: doctorServices } = await supabase
     .from('doctor_services')
@@ -33,10 +44,15 @@ export default async function EchipaPage() {
     .order('doctor_id')
 
   // Map doctor_id to list of service names
-  const servicesByDoctor = (doctorServices ?? []).reduce<
+  // Explicit type for join result
+  interface DoctorServiceJoin {
+    doctor_id: string
+    services: { name: string } | { name: string }[] | null
+  }
+
+  const servicesByDoctor = ((doctorServices as unknown as DoctorServiceJoin[]) ?? []).reduce<
     Record<string, string[]>
-  >((acc, ds) => {
-    const row = ds as { doctor_id: string; services: { name: string } | { name: string }[] | null }
+  >((acc, row) => {
     if (!row.services) return acc
     if (!acc[row.doctor_id]) acc[row.doctor_id] = []
     if (Array.isArray(row.services)) {
